@@ -1,0 +1,33 @@
+trigger:
+  branches:
+    include:
+    - '*'
+variables:
+  currentDate: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
+
+stages:
+- stage: default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: windows-latest
+    steps:
+    - task: CmdLine@2
+      inputs:
+        script: 'git clone --mirror https://qj7o3i3j4em3mzf2vioysbbvhktspflsaxsie2samaszxxkzlgra@dev.azure.com/nandyalampetaAkbar01/AzureDeVOPS-NETPROJECT/_git/SINGLE-REPO.git'
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/SINGLE-REPO.git'
+        includeRootFolder: true
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/Backup.zip'
+        replaceExistingArchive: true
+    - task: AzureFileCopy@3
+      displayName: 'AzureBlob File Copy'
+      inputs:
+        SourcePath: '$(Build.ArtifactStagingDirectory)/Backup.zip'
+        azureSubscription: 'Single-REPO'
+        Destination: 'AzureBlob'
+        storage: 'akbarstorage2'
+        ContainerName: 'akbarcontainer2'
+        BlobPrefix: 'az-devops-backup_$(currentDate)'
